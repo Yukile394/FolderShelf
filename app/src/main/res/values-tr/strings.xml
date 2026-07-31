@@ -1,0 +1,81 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">FolderShelf</string>
+
+    <string name="action_start">Baslat</string>
+    <string name="action_running">Calisiyor</string>
+    <string name="action_manage_folders">Yonet</string>
+    <string name="action_settings">Ayarlar</string>
+    <string name="action_cancel">Iptal</string>
+    <string name="action_ok">Tamam</string>
+    <string name="action_save">Kaydet</string>
+    <string name="action_delete">Sil</string>
+    <string name="action_rename">Yeniden Adlandir</string>
+    <string name="action_share">Paylas</string>
+    <string name="action_show_info">Bilgileri Goster</string>
+    <string name="action_more_options">Diger secenekler</string>
+    <string name="action_continue">Devam Et</string>
+    <string name="action_close">Kapat</string>
+
+    <string name="status_permissions_needed">Izinleri vermek ve yuzen menuyu etkinlestirmek icin Baslat\'a dokunun.</string>
+    <string name="status_ready">Calisiyor \u2014 ekranin kenarindaki + simgesine goz atin.</string>
+    <string name="shelf_item_count_zero">Henuz oge yok</string>
+
+    <string name="permission_overlay_title">Diger uygulamalarin uzerinde goster</string>
+    <string name="permission_overlay_message">FolderShelf\'in "+" simgesini diger uygulamalarin uzerinde gosterebilmesi icin izne ihtiyaci var. Bir sonraki ekranda FolderShelf icin "Diger uygulamalarin uzerinde goster" seceneğini acin.</string>
+    <string name="permission_overlay_denied_message">Bu izin verilmeden yuzen simge gosterilemez. Istediginiz zaman tekrar Baslat\'a dokunarak izni verebilirsiniz.</string>
+    <string name="permission_notification_title">Bildirim izni</string>
+    <string name="permission_notification_message">Yuzen menu calisirken FolderShelf kalici bir bildirim gosterir; bu sayede istediginiz an gizleyebilir veya kapatabilirsiniz.</string>
+    <string name="permission_notification_denied_message">Bildirim izni verilmese de servis calismaya devam eder, ancak bildirim alaninda gizle/kapat kontrollerini goremezsiniz.</string>
+
+    <string name="error_generic_title">Bir sorun olustu</string>
+    <string name="error_overlay_settings_unavailable">Bu cihazda izin ekrani acilamadi.</string>
+    <string name="error_service_start_failed">Yuzen menu servisi baslatilamadi. Lutfen tekrar deneyin.</string>
+
+    <string name="notification_channel_name">Yuzen menu</string>
+    <string name="notification_channel_description">Yuzen klasor rafinin calisma durumunu gosterir</string>
+    <string name="notification_running_text">FolderShelf calisiyor</string>
+    <string name="notification_action_hide">Gizle</string>
+    <string name="notification_action_show">Goster</string>
+    <string name="notification_action_close">Kapat</string>
+
+    <string name="bubble_content_description">FolderShelf yuzen dugmesi</string>
+    <string name="menu_select_file">Dosya Sec</string>
+    <string name="menu_select_folder">Klasor Sec</string>
+    <string name="menu_recent">Son Eklenenler</string>
+    <string name="menu_settings">Ayarlar</string>
+    <string name="menu_close">Kapat</string>
+    <string name="drag_unsupported_message">Bu uygulamadan dogrudan FolderShelf\'e surukleme desteklenmiyor. Lutfen "Klasor Sec" veya "Dosya Sec" secenegini kullanin.</string>
+
+    <string name="shelf_empty_state">Henuz bir sey yok.\n+ simgesinin menusunden klasor veya dosya ekleyin.</string>
+    <string name="shelf_item_subtitle">%1$s \u2022 %2$d dosya</string>
+    <string name="shelf_item_subtitle_pending">Hesaplaniyor\u2026</string>
+    <string name="confirm_delete_message">"%1$s" FolderShelf\'ten kaldirilsin mi? Cihazinizdaki orijinal dosyalar silinmez.</string>
+    <string name="share_empty_message">Bu ogede paylasilacak dosya bulunmuyor.</string>
+    <string name="type_folder">Klasor</string>
+    <string name="type_file">Dosya</string>
+    <string name="unnamed_item">Adsiz</string>
+
+    <string name="detail_label_size">Boyut</string>
+    <string name="detail_label_file_count">Dosya Sayisi</string>
+    <string name="detail_label_last_modified">Son Duzenlenme Tarihi</string>
+    <string name="detail_added_on">%1$s tarihinde eklendi</string>
+    <string name="detail_calculating">Hesaplaniyor\u2026</string>
+
+    <string name="settings_section_bubble">Yuzen simge</string>
+    <string name="settings_bubble_size_label">Simge boyutu</string>
+    <string name="settings_hide_bubble_label">Simgeyi gizle</string>
+    <string name="settings_section_theme">Gorunum</string>
+    <string name="settings_theme_system">Sistemi takip et</string>
+    <string name="settings_theme_light">Acik</string>
+    <string name="settings_theme_dark">Koyu</string>
+    <string name="settings_section_data">Veri</string>
+    <string name="settings_clear_data_title">Tum verileri temizle</string>
+    <string name="settings_clear_data_message">Bu islem FolderShelf\'teki tum klasor/dosya kayitlarini kaldirir. Cihazinizdaki orijinal dosyalara asla dokunulmaz.</string>
+    <string name="settings_version_format">Surum %1$s</string>
+
+    <plurals name="shelf_item_count">
+        <item quantity="one">%d oge</item>
+        <item quantity="other">%d oge</item>
+    </plurals>
+</resources>
