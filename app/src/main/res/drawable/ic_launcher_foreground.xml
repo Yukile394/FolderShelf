@@ -1,0 +1,14 @@
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="108dp"
+    android:height="108dp"
+    android:viewportWidth="108"
+    android:viewportHeight="108">
+    <!-- Klasor gövdesi (guvenli bolge icinde, ortalanmis) -->
+    <path
+        android:fillColor="#FFFFFF"
+        android:pathData="M27,40 L47,40 L52,46 L81,46 C83.2,46 85,47.8 85,50 L85,72 C85,74.2 83.2,76 81,76 L27,76 C24.8,76 23,74.2 23,72 L23,44 C23,41.8 24.8,40 27,40 Z" />
+    <!-- Arti (+) rozeti -->
+    <path
+        android:fillColor="#FF8A3D"
+        android:pathData="M70,54 L76,54 L76,60 L82,60 L82,66 L76,66 L76,72 L70,72 L70,66 L64,66 L64,60 L70,60 Z" />
+</vector>
