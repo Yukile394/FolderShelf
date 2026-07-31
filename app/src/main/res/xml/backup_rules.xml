@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<full-backup-content>
+    <!-- SharedPreferences icindeki raf kayitlarini yedekle; SAF izinleri
+         cihaz degisince gecerli olmayacagi icin yeni cihazda kullanici
+         klasorleri tekrar secmesi gerekebilir, ancak liste/ayarlar kalir. -->
+    <include domain="sharedpref" path="." />
+</full-backup-content>
