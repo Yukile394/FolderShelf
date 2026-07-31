@@ -1,0 +1,84 @@
+<?xml version="1.0" encoding="utf-8"?>
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools">
+
+    <!-- "+ " simgesinin diger uygulamalarin uzerinde gorunmesi icin gereklidir. -->
+    <uses-permission android:name="android.permission.SYSTEM_ALERT_WINDOW" />
+
+    <!-- Kalici (ongoing) bildirimle calisan bir on plan servisi baslatmak icin. -->
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
+
+    <!-- Android 14 (API 34) ve sonrasinda, standart kategorilere (konum,
+         kamera, medya vb.) girmeyen on plan servisleri icin "specialUse"
+         alt turu bildirilmelidir. Floating overlay servisimiz bu kategoriye girer. -->
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE_SPECIAL_USE" />
+
+    <!-- Android 13 (API 33) ve sonrasinda bildirim gostermek icin calisma
+         zamaninda kullanicidan istenmesi gereken izin. -->
+    <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
+
+    <!-- NOT: Klasor/dosya erisimi tamamen Storage Access Framework (SAF)
+         uzerinden (ACTION_OPEN_DOCUMENT_TREE / ACTION_OPEN_DOCUMENT) yapildigi
+         icin READ_EXTERNAL_STORAGE veya MANAGE_EXTERNAL_STORAGE gibi genis
+         kapsamli izinlere ihtiyac YOKTUR. Bu, hem daha guvenli hem de
+         Android'in guncel depolama politikalarina tam uyumludur. -->
+
+    <application
+        android:name=".FolderShelfApp"
+        android:allowBackup="true"
+        android:dataExtractionRules="@xml/data_extraction_rules"
+        android:fullBackupContent="@xml/backup_rules"
+        android:icon="@mipmap/ic_launcher"
+        android:label="@string/app_name"
+        android:roundIcon="@mipmap/ic_launcher_round"
+        android:supportsRtl="true"
+        android:theme="@style/Theme.FolderShelf"
+        android:enableOnBackInvokedCallback="true"
+        tools:targetApi="36">
+
+        <activity
+            android:name=".ui.main.MainActivity"
+            android:exported="true"
+            android:theme="@style/Theme.FolderShelf">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+        </activity>
+
+        <activity
+            android:name=".ui.list.ShelfListActivity"
+            android:exported="false"
+            android:theme="@style/Theme.FolderShelf"
+            android:parentActivityName=".ui.main.MainActivity" />
+
+        <activity
+            android:name=".ui.settings.SettingsActivity"
+            android:exported="false"
+            android:theme="@style/Theme.FolderShelf"
+            android:parentActivityName=".ui.main.MainActivity" />
+
+        <!-- PickerActivity gorunmez (seffaf) bir "kopru" ekrandir: sistemin
+             dosya/klasor secicisini acar, sonucu kaydeder ve hemen kapanir.
+             FloatingOverlayService (bir Service oldugu icin) sistem
+             secicisini dogrudan acamadigi icin bu Activity'ye ihtiyac duyar. -->
+        <activity
+            android:name=".ui.picker.PickerActivity"
+            android:exported="false"
+            android:theme="@style/Theme.FolderShelf.Transparent"
+            android:excludeFromRecents="true"
+            android:launchMode="singleTask"
+            android:taskAffinity="" />
+
+        <service
+            android:name=".overlay.FloatingOverlayService"
+            android:exported="false"
+            android:foregroundServiceType="specialUse">
+            <property
+                android:name="android.app.PROPERTY_SPECIAL_USE_FGS_SUBTYPE"
+                android:value="floating_folder_shelf_overlay" />
+        </service>
+
+    </application>
+
+</manifest>
