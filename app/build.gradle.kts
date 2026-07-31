@@ -14,7 +14,7 @@ plugins {
 
 android {
     namespace = "com.yukile.foldershelf"
-    compileSdk = 36
+    compileSdk = 37
 
     defaultConfig {
         applicationId = "com.yukile.foldershelf"
@@ -29,11 +29,6 @@ android {
 
     signingConfigs {
         create("release") {
-            // Bu deger yalnizca .github/workflows/android-ci.yml icindeki
-            // "Decode signing keystore" adimi calistiginda (yani ilgili
-            // GitHub Secrets tanimliysa) ayarlanir. Aksi halde bos kalir
-            // ve asagida release build type'i otomatik olarak debug
-            // anahtariyla imzalamaya duser (yuklenebilir APK garantisi).
             val keystorePathEnv = System.getenv("RELEASE_KEYSTORE_PATH")
             if (!keystorePathEnv.isNullOrBlank() && file(keystorePathEnv).exists()) {
                 storeFile = file(keystorePathEnv)
@@ -63,10 +58,6 @@ android {
             signingConfig = if (hasCustomSigning) {
                 signingConfigs.getByName("release")
             } else {
-                // Kendi imzalama anahtariniz henuz tanimli degil: gecici
-                // olarak debug anahtariyla imzalanir, boylece release APK
-                // yine de telefona yuklenebilir kalir. Gercek yayin icin
-                // INSTALL.md dosyasindaki imzalama adimlarini uygulayin.
                 signingConfigs.getByName("debug")
             }
         }
@@ -75,9 +66,6 @@ android {
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_17
         targetCompatibility = JavaVersion.VERSION_17
-        // NOT: kotlin.compilerOptions.jvmTarget'i ayrica ayarlamiyoruz;
-        // AGP 9 dahili Kotlin bu degeri varsayilan olarak yukaridaki
-        // targetCompatibility'den alir.
     }
 
     buildFeatures {
