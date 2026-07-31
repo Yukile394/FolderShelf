@@ -1,0 +1,29 @@
+# Gradle
+.gradle/
+build/
+*.iml
+
+# Yerel yapilandirma dosyalari
+local.properties
+
+# Android Studio / IntelliJ
+.idea/
+*.hprof
+.navigation/
+captures/
+
+# Derleme ciktilari
+app/build/
+app/release/
+app/debug/
+
+# Imzalama anahtarlari (asla repoya eklenmemeli)
+*.keystore
+*.jks
+release.keystore
+
+# macOS
+.DS_Store
+
+# Gradle Wrapper indirilen dagitim (jar disari alinir, otomatik olusturulur)
+gradle/wrapper/gradle-wrapper.jar
