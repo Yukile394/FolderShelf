@@ -1,0 +1,90 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">FolderShelf</string>
+
+    <!-- Genel aksiyonlar -->
+    <string name="action_start">Start</string>
+    <string name="action_running">Running</string>
+    <string name="action_manage_folders">Manage</string>
+    <string name="action_settings">Settings</string>
+    <string name="action_cancel">Cancel</string>
+    <string name="action_ok">OK</string>
+    <string name="action_save">Save</string>
+    <string name="action_delete">Delete</string>
+    <string name="action_rename">Rename</string>
+    <string name="action_share">Share</string>
+    <string name="action_show_info">Show info</string>
+    <string name="action_more_options">More options</string>
+    <string name="action_continue">Continue</string>
+    <string name="action_close">Close</string>
+
+    <!-- Ana ekran -->
+    <string name="status_permissions_needed">Tap Start to grant permissions and enable the floating shelf.</string>
+    <string name="status_ready">Running \u2014 look for the + bubble on the edge of your screen.</string>
+    <string name="shelf_item_count_zero">No items yet</string>
+
+    <!-- Izinler -->
+    <string name="permission_overlay_title">Display over other apps</string>
+    <string name="permission_overlay_message">FolderShelf needs permission to draw the floating + bubble on top of other apps. On the next screen, enable \"Allow display over other apps\" for FolderShelf.</string>
+    <string name="permission_overlay_denied_message">Without this permission the floating bubble cannot be shown. You can grant it any time from Start again.</string>
+    <string name="permission_notification_title">Notification permission</string>
+    <string name="permission_notification_message">FolderShelf shows a persistent notification while the floating shelf is active, so you can hide or close it at any time.</string>
+    <string name="permission_notification_denied_message">Without notification permission the service can still run, but you will not see the hide/close controls in your notification shade.</string>
+
+    <!-- Hatalar -->
+    <string name="error_generic_title">Something went wrong</string>
+    <string name="error_overlay_settings_unavailable">Could not open the overlay permission screen on this device.</string>
+    <string name="error_service_start_failed">The floating shelf service could not be started. Please try again.</string>
+
+    <!-- Bildirim -->
+    <string name="notification_channel_name">Floating shelf</string>
+    <string name="notification_channel_description">Shows the ongoing status of the floating folder shelf</string>
+    <string name="notification_running_text">FolderShelf is running</string>
+    <string name="notification_action_hide">Hide</string>
+    <string name="notification_action_show">Show</string>
+    <string name="notification_action_close">Close</string>
+
+    <!-- Suruklenen menu -->
+    <string name="bubble_content_description">FolderShelf floating button</string>
+    <string name="menu_select_file">Select file</string>
+    <string name="menu_select_folder">Select folder</string>
+    <string name="menu_recent">Recently added</string>
+    <string name="menu_settings">Settings</string>
+    <string name="menu_close">Close</string>
+    <string name="drag_unsupported_message">This app does not support dragging directly into FolderShelf. Please use \"Select folder\" or \"Select file\" instead.</string>
+
+    <!-- Yonetim listesi -->
+    <string name="shelf_empty_state">Nothing here yet.\nUse the + bubble\'s menu to add a folder or file.</string>
+    <string name="shelf_item_subtitle">%1$s \u2022 %2$d files</string>
+    <string name="shelf_item_subtitle_pending">Calculating\u2026</string>
+    <string name="confirm_delete_message">Remove \"%1$s\" from FolderShelf? The original files on your device will not be deleted.</string>
+    <string name="share_empty_message">This item does not contain any files to share.</string>
+    <string name="type_folder">Folder</string>
+    <string name="type_file">File</string>
+    <string name="unnamed_item">Unnamed</string>
+
+    <!-- Detay sayfasi -->
+    <string name="detail_label_size">Size</string>
+    <string name="detail_label_file_count">File count</string>
+    <string name="detail_label_last_modified">Last modified</string>
+    <string name="detail_added_on">Added on %1$s</string>
+    <string name="detail_calculating">Calculating\u2026</string>
+
+    <!-- Ayarlar -->
+    <string name="settings_section_bubble">Floating bubble</string>
+    <string name="settings_bubble_size_label">Bubble size</string>
+    <string name="settings_hide_bubble_label">Hide bubble</string>
+    <string name="settings_section_theme">Appearance</string>
+    <string name="settings_theme_system">Follow system</string>
+    <string name="settings_theme_light">Light</string>
+    <string name="settings_theme_dark">Dark</string>
+    <string name="settings_section_data">Data</string>
+    <string name="settings_clear_data_title">Clear all data</string>
+    <string name="settings_clear_data_message">This removes every folder/file entry from FolderShelf. The original files on your device are never touched.</string>
+    <string name="settings_version_format">Version %1$s</string>
+
+    <plurals name="shelf_item_count">
+        <item quantity="one">%d item</item>
+        <item quantity="other">%d items</item>
+    </plurals>
+</resources>

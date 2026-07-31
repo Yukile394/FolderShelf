@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Acik tema -->
+    <color name="primary_light">#1B6FA8</color>
+    <color name="on_primary_light">#FFFFFF</color>
+    <color name="primary_container_light">#D2E4FF</color>
+    <color name="on_primary_container_light">#001C37</color>
+
+    <color name="secondary_light">#FF8A3D</color>
+    <color name="on_secondary_light">#FFFFFF</color>
+
+    <color name="surface_light">#FBFCFF</color>
+    <color name="on_surface_light">#1A1C1E</color>
+    <color name="surface_variant_light">#DEE3EB</color>
+    <color name="on_surface_variant_light">#42474E</color>
+    <color name="surface_container_high_light">#EDEFF3</color>
+    <color name="outline_variant_light">#C2C7CF</color>
+    <color name="error_light">#BA1A1A</color>
+
+    <!-- Koyu tema -->
+    <color name="primary_dark">#9ECAFF</color>
+    <color name="on_primary_dark">#00325A</color>
+    <color name="primary_container_dark">#00497F</color>
+    <color name="on_primary_container_dark">#D2E4FF</color>
+
+    <color name="secondary_dark">#FFB68C</color>
+    <color name="on_secondary_dark">#5A2F00</color>
+
+    <color name="surface_dark">#111416</color>
+    <color name="on_surface_dark">#E2E2E6</color>
+    <color name="surface_variant_dark">#42474E</color>
+    <color name="on_surface_variant_dark">#C2C7CF</color>
+    <color name="surface_container_high_dark">#2B2E31</color>
+    <color name="outline_variant_dark">#42474E</color>
+    <color name="error_dark">#FFB4AB</color>
+</resources>
