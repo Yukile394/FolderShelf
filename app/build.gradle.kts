@@ -106,7 +106,7 @@ dependencies {
     implementation("androidx.lifecycle:lifecycle-service:2.11.0")
 
     implementation("androidx.activity:activity-ktx:1.11.0")
-    implementation("androidx.fragment:fragment-ktx:1.9.0")
+    implementation("androidx.fragment:fragment-ktx:1.8.9")
 
     implementation("androidx.recyclerview:recyclerview:1.4.0")
     implementation("androidx.documentfile:documentfile:1.1.0")
