@@ -44,11 +44,16 @@ class ShelfRepository private constructor(
 
     suspend fun addItemFromUri(context: Context, uri: Uri, type: ItemType) {
         withContext(Dispatchers.IO) {
-            val docFile = if (type == ItemType.FOLDER) {
-                DocumentFile.fromTreeUri(context, uri)
-            } else {
-                DocumentFile.fromSingleUri(context, uri)
-            }
+            // ONEMLI: "type" caller tarafindan bir tahmindir (ozellikle
+            // surukle-birak akisinda). Surukle-birakla gelen URI'ler cogu
+            // zaman gercek bir "tree" URI degil, duz bir "document" URI'dir;
+            // boyle bir URI'yi DocumentFile.fromTreeUri() ile acmaya
+            // calismak IllegalArgumentException ("Uri lacks 'tree' segment")
+            // firlatir ve tum uygulamayi cokertirdi. Bu yuzden burada once
+            // guvenli sekilde deneriz, olmazsa tekil belge olarak dusup
+            // gercek turu docFile.isDirectory'den ogreniriz.
+            val (docFile, resolvedType) = resolveDocumentSafely(context, uri, type)
+
             val name = docFile?.name
                 ?: uri.lastPathSegment
                 ?: context.getString(R.string.unnamed_item)
@@ -57,13 +62,43 @@ class ShelfRepository private constructor(
                 id = storage.nextId(),
                 uri = uri.toString(),
                 displayName = name,
-                type = type,
+                type = resolvedType,
                 addedAt = System.currentTimeMillis()
             )
             val updated = storage.readAll() + newItem
             storage.writeAll(updated)
             _items.value = updated.sortedByDescending { it.addedAt }
         }
+    }
+
+    /**
+     * type == FOLDER ise once gercekten bir tree URI olup olmadigini
+     * guvenli sekilde dener; basarisiz olursa (surukle-birakta cok sik
+     * rastlanir) tekil belge olarak acar ve isDirectory kontroluyle
+     * gercek turu belirler. Hicbir asamada exception disariya sizmaz.
+     */
+    private fun resolveDocumentSafely(
+        context: Context,
+        uri: Uri,
+        type: ItemType
+    ): Pair<DocumentFile?, ItemType> {
+        if (type == ItemType.FOLDER) {
+            val treeDoc = try {
+                DocumentFile.fromTreeUri(context, uri)
+            } catch (e: Exception) {
+                null
+            }
+            if (treeDoc != null && treeDoc.exists()) {
+                return treeDoc to ItemType.FOLDER
+            }
+        }
+        val singleDoc = try {
+            DocumentFile.fromSingleUri(context, uri)
+        } catch (e: Exception) {
+            null
+        }
+        val actualType = if (singleDoc?.isDirectory == true) ItemType.FOLDER else ItemType.FILE
+        return singleDoc to actualType
     }
 
     suspend fun renameItem(id: Long, newName: String) {
