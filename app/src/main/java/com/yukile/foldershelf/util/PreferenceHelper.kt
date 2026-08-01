@@ -22,7 +22,7 @@ class PreferenceHelper(context: Context) {
         set(value) = prefs.edit().putInt(KEY_BUBBLE_X, value).apply()
 
     var bubbleY: Int
-        get() = prefs.getInt(KEY_BUBBLE_Y, 300)
+        get() = prefs.getInt(KEY_BUBBLE_Y, 650)
         set(value) = prefs.edit().putInt(KEY_BUBBLE_Y, value).apply()
 
     var bubbleSizeDp: Int
