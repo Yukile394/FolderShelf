@@ -68,18 +68,18 @@ class SettingsActivity : AppCompatActivity() {
             if (fromUser) {
                 val sizeDp = value.toInt()
                 prefs.bubbleSizeDp = sizeDp
-                // Servis calisiyorsa boyutu anlik olarak da uygulamasi icin
-                // bir Intent ile bilgilendirme yerine, servis her
-                // baslatildiginda PreferenceHelper'dan okudugundan yeni
-                // boyut bir sonraki gosterimde otomatik uygulanir. Servis
-                // su an calisiyorsa da bildirim ikonuna dokunmadan da
-                // gorsel olarak degisebilmesi icin servisi yeniden
-                // tetikliyoruz.
-                if (com.yukile.foldershelf.util.PermissionUtils.canDrawOverlays(this)) {
-                    val intent = Intent(this, FloatingOverlayService::class.java).apply {
-                        action = Constants.ACTION_SHOW_BUBBLE
+                // Servis zaten calisiyorsa balonu ANINDA yeniden
+                // boyutlandir. Calismiyorsa hicbir sey baslatmaya gerek
+                // yok: bir sonraki "Baslat" prefs'ten guncel boyutu okur.
+                if (FloatingOverlayService.isRunning) {
+                    try {
+                        val intent = Intent(this, FloatingOverlayService::class.java).apply {
+                            action = Constants.ACTION_UPDATE_BUBBLE_SIZE
+                        }
+                        startService(intent)
+                    } catch (e: Exception) {
+                        e.printStackTrace()
                     }
-                    startService(intent)
                 }
             }
         }
