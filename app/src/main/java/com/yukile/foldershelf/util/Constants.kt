@@ -16,6 +16,7 @@ object Constants {
     const val ACTION_HIDE_BUBBLE = "com.yukile.foldershelf.action.HIDE_BUBBLE"
     const val ACTION_SHOW_BUBBLE = "com.yukile.foldershelf.action.SHOW_BUBBLE"
     const val ACTION_STOP_SERVICE = "com.yukile.foldershelf.action.STOP_SERVICE"
+    const val ACTION_UPDATE_BUBBLE_SIZE = "com.yukile.foldershelf.action.UPDATE_BUBBLE_SIZE"
 
     // Intent extra anahtarlari
     const val EXTRA_PICK_FOLDER = "extra_pick_folder"
