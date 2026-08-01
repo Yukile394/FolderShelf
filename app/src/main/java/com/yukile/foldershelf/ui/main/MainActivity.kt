@@ -181,6 +181,10 @@ class MainActivity : AppCompatActivity() {
             )
         } finally {
             viewModel.refreshStatus()
+            // Servis onCreate/onStartCommand main looper'a asenkron olarak
+            // gonderilir; buton metninin "Calisiyor"a hemen guncellenmesi
+            // icin kisa bir gecikmeyle tekrar kontrol ediyoruz.
+            binding.root.postDelayed({ viewModel.refreshStatus() }, 400L)
         }
     }
 
