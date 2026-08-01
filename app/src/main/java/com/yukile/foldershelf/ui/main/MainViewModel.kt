@@ -4,6 +4,7 @@ import android.app.Application
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import com.yukile.foldershelf.data.repository.ShelfRepository
+import com.yukile.foldershelf.overlay.FloatingOverlayService
 import com.yukile.foldershelf.util.PermissionUtils
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
@@ -39,6 +40,12 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
     }
 
     fun refreshStatus() {
-        _isReady.value = PermissionUtils.allRequiredPermissionsGranted(getApplication())
+        val permissionsOk = PermissionUtils.allRequiredPermissionsGranted(getApplication())
+        // Izinler yeterli DEGIL - buton kesinlikle "Baslat" gostermeli.
+        // Izinler yeterli AMA servis fiilen calismiyorsa da (ör. servis
+        // beklenmedik sekilde durduysa) "Baslat" gostermeliyiz; aksi
+        // halde kullanici butona basmadan hicbir sey olmuyormus gibi
+        // gorunur ("calisiyor" yazar ama + ekranda yok).
+        _isReady.value = permissionsOk && FloatingOverlayService.isRunning
     }
 }
