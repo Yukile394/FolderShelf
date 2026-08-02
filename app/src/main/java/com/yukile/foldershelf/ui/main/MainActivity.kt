@@ -33,20 +33,20 @@ class MainActivity : AppCompatActivity() {
     private lateinit var binding: ActivityMainBinding
     private val viewModel: MainViewModel by viewModels()
 
-    // Butonun spam tıklamaya karşı korunması için flag
-    private var isStartInProgress = false
+    // Çift tıklama / spam koruması
+    private var actionInProgress = false
 
     private val overlayPermissionLauncher = registerForActivityResult(
         ActivityResultContracts.StartActivityForResult()
     ) {
-        isStartInProgress = false
+        actionInProgress = false
         proceedAfterOverlayCheck()
     }
 
     private val notificationPermissionLauncher = registerForActivityResult(
         ActivityResultContracts.RequestPermission()
     ) { granted ->
-        isStartInProgress = false
+        actionInProgress = false
         if (granted) {
             startOverlayService()
         } else {
@@ -65,9 +65,7 @@ class MainActivity : AppCompatActivity() {
 
         applyEdgeToEdgeInsets()
 
-        binding.buttonStart.setOnClickListener {
-            handleStartButtonClick()
-        }
+        binding.buttonStart.setOnClickListener { onStartClicked() }
         binding.buttonManage.setOnClickListener {
             startActivity(Intent(this, ShelfListActivity::class.java))
         }
@@ -79,75 +77,34 @@ class MainActivity : AppCompatActivity() {
         maybeShowCrashDialog()
     }
 
-    /**
-     * Başlat butonuna tek tıklamada doğru tepki verir.
-     * - Servis zaten çalışıyorsa hiçbir şey yapmaz (idempotent).
-     * - İşlem devam ediyorsa (izin ekranı açık vb.) tekrar girişimi engeller.
-     */
-    private fun handleStartButtonClick() {
-        // Servis zaten ayakta → buton durumu "Çalışıyor" göstermeli, tekrar başlatmaya gerek yok
-        if (FloatingOverlayService.isRunning) {
-            viewModel.refreshStatus()
-            return
-        }
-        // Önceki tıklamadan kaynaklanan akış hâlâ devam ediyor → yoksay
-        if (isStartInProgress) return
+    override fun onResume() {
+        super.onResume()
+        actionInProgress = false          // arka plandan dönüşte kilidi sıfırla
+        viewModel.refreshStatus()
+    }
 
-        isStartInProgress = true
+    // -----------------------------------------------------------------------
+    // Başlat butonu
+    // -----------------------------------------------------------------------
+
+    private fun onStartClicked() {
+        // Servis zaten çalışıyorsa butona basmanın etkisi yok
+        if (FloatingOverlayService.isRunning) return
+        // Akış devam ediyorsa (izin ekranı açık) tekrar girme
+        if (actionInProgress) return
+        actionInProgress = true
         beginPermissionFlow()
     }
 
-    private fun maybeShowCrashDialog() {
-        val crashed = intent?.getBooleanExtra(CrashHandler.EXTRA_CRASHED, false) == true
-        if (!crashed) return
-        intent.removeExtra(CrashHandler.EXTRA_CRASHED)
-
-        val log = CrashHandler.latestCrashLog(this) ?: return
-        AlertDialog.Builder(this)
-            .setTitle(R.string.crash_dialog_title)
-            .setMessage(log.take(4000))
-            .setPositiveButton(R.string.action_copy) { _, _ ->
-                val clipboard = getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
-                clipboard.setPrimaryClip(ClipData.newPlainText("crash_log", log))
-                Toast.makeText(this, R.string.crash_copied_toast, Toast.LENGTH_SHORT).show()
-            }
-            .setNeutralButton(R.string.action_share) { _, _ ->
-                val shareIntent = Intent(Intent.ACTION_SEND).apply {
-                    type = "text/plain"
-                    putExtra(Intent.EXTRA_TEXT, log)
-                }
-                try {
-                    startActivity(Intent.createChooser(shareIntent, getString(R.string.action_share)))
-                } catch (e: Exception) {
-                    e.printStackTrace()
-                }
-            }
-            .setNegativeButton(R.string.action_ok, null)
-            .setCancelable(true)
-            .show()
-    }
-
-    override fun onResume() {
-        super.onResume()
-        // Her onResume'da servis durumunu tazele; dönen izin ekranları burayı tetikler
-        viewModel.refreshStatus()
-        // Eğer akış sırasında biz arka plana gidip geri döndüysek kilidi sıfırla
-        isStartInProgress = false
-    }
-
-    private fun applyEdgeToEdgeInsets() {
-        ViewCompat.setOnApplyWindowInsetsListener(binding.root) { view, insets ->
-            val systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars())
-            view.setPadding(systemBars.left, systemBars.top, systemBars.right, systemBars.bottom)
-            insets
-        }
-    }
+    // -----------------------------------------------------------------------
+    // ViewModel gözlemleme
+    // -----------------------------------------------------------------------
 
     private fun observeViewModel() {
         lifecycleScope.launch {
             repeatOnLifecycle(Lifecycle.State.STARTED) {
                 launch {
-                    viewModel.isRunning.collect { running ->
+                    viewModel.isReady.collect { running ->
                         if (running) {
                             binding.textStatus.text = getString(R.string.status_ready)
                             binding.buttonStart.text = getString(R.string.action_running)
@@ -170,7 +127,9 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
-    // region İzin akışı
+    // -----------------------------------------------------------------------
+    // İzin akışı
+    // -----------------------------------------------------------------------
 
     private fun beginPermissionFlow() {
         if (!PermissionUtils.canDrawOverlays(this)) {
@@ -191,28 +150,23 @@ class MainActivity : AppCompatActivity() {
                 )
                 try {
                     overlayPermissionLauncher.launch(intent)
-                    // isStartInProgress = true olarak kalır; launcher callback'i sıfırlayacak
                 } catch (e: Exception) {
                     e.printStackTrace()
-                    isStartInProgress = false
+                    actionInProgress = false
                     showInfoDialog(
                         getString(R.string.error_generic_title),
                         getString(R.string.error_overlay_settings_unavailable)
                     )
                 }
             }
-            .setNegativeButton(R.string.action_cancel) { _, _ ->
-                isStartInProgress = false
-            }
-            .setOnCancelListener {
-                isStartInProgress = false
-            }
+            .setNegativeButton(R.string.action_cancel) { _, _ -> actionInProgress = false }
+            .setOnCancelListener { actionInProgress = false }
             .show()
     }
 
     private fun proceedAfterOverlayCheck() {
         if (!PermissionUtils.canDrawOverlays(this)) {
-            isStartInProgress = false
+            actionInProgress = false
             showInfoDialog(
                 getString(R.string.permission_overlay_title),
                 getString(R.string.permission_overlay_denied_message)
@@ -223,23 +177,23 @@ class MainActivity : AppCompatActivity() {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU &&
             !PermissionUtils.hasNotificationPermission(this)
         ) {
-            // notificationPermissionLauncher callback'i isStartInProgress'i sıfırlayacak
             notificationPermissionLauncher.launch(android.Manifest.permission.POST_NOTIFICATIONS)
             return
         }
-        isStartInProgress = false
+        actionInProgress = false
         startOverlayService()
     }
 
     private fun startOverlayService() {
-        // Servis zaten çalışıyorsa tekrar başlatma (race condition koruması)
         if (FloatingOverlayService.isRunning) {
             viewModel.refreshStatus()
             return
         }
         try {
-            val intent = Intent(this, FloatingOverlayService::class.java)
-            ContextCompat.startForegroundService(this, intent)
+            ContextCompat.startForegroundService(
+                this,
+                Intent(this, FloatingOverlayService::class.java)
+            )
         } catch (e: Exception) {
             e.printStackTrace()
             showInfoDialog(
@@ -249,11 +203,51 @@ class MainActivity : AppCompatActivity() {
             viewModel.refreshStatus()
             return
         }
-        // Servis başladıktan sonra durumu güncelle; onCreate içindeki isRunning=true
-        // ile senkronize olmak için kısa bir gecikme ile ikinci bir kontrol yap.
+        // Servis onCreate()'e ulaşana kadar kısa bekle sonra güncelle
         viewModel.refreshStatus()
-        binding.root.postDelayed({ viewModel.refreshStatus() }, 300L)
-        binding.root.postDelayed({ viewModel.refreshStatus() }, 800L)
+        binding.root.postDelayed({ viewModel.refreshStatus() }, 400L)
+        binding.root.postDelayed({ viewModel.refreshStatus() }, 1000L)
+    }
+
+    // -----------------------------------------------------------------------
+    // Crash dialog
+    // -----------------------------------------------------------------------
+
+    private fun maybeShowCrashDialog() {
+        val crashed = intent?.getBooleanExtra(CrashHandler.EXTRA_CRASHED, false) == true
+        if (!crashed) return
+        intent.removeExtra(CrashHandler.EXTRA_CRASHED)
+        val log = CrashHandler.latestCrashLog(this) ?: return
+        AlertDialog.Builder(this)
+            .setTitle(R.string.crash_dialog_title)
+            .setMessage(log.take(4000))
+            .setPositiveButton(R.string.action_copy) { _, _ ->
+                val clipboard = getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
+                clipboard.setPrimaryClip(ClipData.newPlainText("crash_log", log))
+                Toast.makeText(this, R.string.crash_copied_toast, Toast.LENGTH_SHORT).show()
+            }
+            .setNeutralButton(R.string.action_share) { _, _ ->
+                val shareIntent = Intent(Intent.ACTION_SEND).apply {
+                    type = "text/plain"
+                    putExtra(Intent.EXTRA_TEXT, log)
+                }
+                try {
+                    startActivity(Intent.createChooser(shareIntent, getString(R.string.action_share)))
+                } catch (e: Exception) { e.printStackTrace() }
+            }
+            .setNegativeButton(R.string.action_ok, null)
+            .setCancelable(true)
+            .show()
+    }
+
+    // -----------------------------------------------------------------------
+
+    private fun applyEdgeToEdgeInsets() {
+        ViewCompat.setOnApplyWindowInsetsListener(binding.root) { view, insets ->
+            val sb = insets.getInsets(WindowInsetsCompat.Type.systemBars())
+            view.setPadding(sb.left, sb.top, sb.right, sb.bottom)
+            insets
+        }
     }
 
     private fun showInfoDialog(title: String, message: String) {
@@ -263,7 +257,4 @@ class MainActivity : AppCompatActivity() {
             .setPositiveButton(R.string.action_ok, null)
             .show()
     }
-
-    // endregion
 }
-
