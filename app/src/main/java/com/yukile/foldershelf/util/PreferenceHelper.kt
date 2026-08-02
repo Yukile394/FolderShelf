@@ -49,6 +49,23 @@ class PreferenceHelper(context: Context) {
         get() = prefs.getBoolean(KEY_NOTIF_REQUESTED, false)
         set(value) = prefs.edit().putBoolean(KEY_NOTIF_REQUESTED, value).apply()
 
+    // Servis (bubble/overlay penceresi) başlatılırken oluşan son hatanın
+    // mesajı. Servis kendi içinde try/catch ile hataları yutuyordu ve bu
+    // yüzden kullanıcı arayüzünde "hiçbir şey olmuyormuş" gibi görünüyordu.
+    // Artık servis hatayı buraya yazıyor, MainActivity de bunu okuyup
+    // kullanıcıya gösteriyor.
+    var lastServiceError: String?
+        get() = prefs.getString(KEY_LAST_ERROR, null)
+        set(value) = prefs.edit().putString(KEY_LAST_ERROR, value).apply()
+
+    var lastServiceErrorAt: Long
+        get() = prefs.getLong(KEY_LAST_ERROR_AT, 0L)
+        set(value) = prefs.edit().putLong(KEY_LAST_ERROR_AT, value).apply()
+
+    fun clearLastServiceError() {
+        prefs.edit().remove(KEY_LAST_ERROR).remove(KEY_LAST_ERROR_AT).apply()
+    }
+
     companion object {
         private const val KEY_BUBBLE_X = "bubble_x"
         private const val KEY_BUBBLE_Y = "bubble_y"
@@ -57,6 +74,8 @@ class PreferenceHelper(context: Context) {
         private const val KEY_BUBBLE_LEFT_EDGE = "bubble_left_edge"
         private const val KEY_THEME_MODE = "theme_mode"
         private const val KEY_NOTIF_REQUESTED = "notif_permission_requested"
+        private const val KEY_LAST_ERROR = "last_service_error"
+        private const val KEY_LAST_ERROR_AT = "last_service_error_at"
 
         const val THEME_SYSTEM = "system"
         const val THEME_LIGHT = "light"
