@@ -33,15 +33,20 @@ class MainActivity : AppCompatActivity() {
     private lateinit var binding: ActivityMainBinding
     private val viewModel: MainViewModel by viewModels()
 
+    // Butonun spam tıklamaya karşı korunması için flag
+    private var isStartInProgress = false
+
     private val overlayPermissionLauncher = registerForActivityResult(
         ActivityResultContracts.StartActivityForResult()
     ) {
+        isStartInProgress = false
         proceedAfterOverlayCheck()
     }
 
     private val notificationPermissionLauncher = registerForActivityResult(
         ActivityResultContracts.RequestPermission()
     ) { granted ->
+        isStartInProgress = false
         if (granted) {
             startOverlayService()
         } else {
@@ -60,7 +65,9 @@ class MainActivity : AppCompatActivity() {
 
         applyEdgeToEdgeInsets()
 
-        binding.buttonStart.setOnClickListener { beginPermissionFlow() }
+        binding.buttonStart.setOnClickListener {
+            handleStartButtonClick()
+        }
         binding.buttonManage.setOnClickListener {
             startActivity(Intent(this, ShelfListActivity::class.java))
         }
@@ -70,6 +77,24 @@ class MainActivity : AppCompatActivity() {
 
         observeViewModel()
         maybeShowCrashDialog()
+    }
+
+    /**
+     * Başlat butonuna tek tıklamada doğru tepki verir.
+     * - Servis zaten çalışıyorsa hiçbir şey yapmaz (idempotent).
+     * - İşlem devam ediyorsa (izin ekranı açık vb.) tekrar girişimi engeller.
+     */
+    private fun handleStartButtonClick() {
+        // Servis zaten ayakta → buton durumu "Çalışıyor" göstermeli, tekrar başlatmaya gerek yok
+        if (FloatingOverlayService.isRunning) {
+            viewModel.refreshStatus()
+            return
+        }
+        // Önceki tıklamadan kaynaklanan akış hâlâ devam ediyor → yoksay
+        if (isStartInProgress) return
+
+        isStartInProgress = true
+        beginPermissionFlow()
     }
 
     private fun maybeShowCrashDialog() {
@@ -104,7 +129,10 @@ class MainActivity : AppCompatActivity() {
 
     override fun onResume() {
         super.onResume()
+        // Her onResume'da servis durumunu tazele; dönen izin ekranları burayı tetikler
         viewModel.refreshStatus()
+        // Eğer akış sırasında biz arka plana gidip geri döndüysek kilidi sıfırla
+        isStartInProgress = false
     }
 
     private fun applyEdgeToEdgeInsets() {
@@ -119,16 +147,15 @@ class MainActivity : AppCompatActivity() {
         lifecycleScope.launch {
             repeatOnLifecycle(Lifecycle.State.STARTED) {
                 launch {
-                    viewModel.isReady.collect { ready ->
-                        binding.textStatus.text = if (ready) {
-                            getString(R.string.status_ready)
+                    viewModel.isRunning.collect { running ->
+                        if (running) {
+                            binding.textStatus.text = getString(R.string.status_ready)
+                            binding.buttonStart.text = getString(R.string.action_running)
+                            binding.buttonStart.isEnabled = false
                         } else {
-                            getString(R.string.status_permissions_needed)
-                        }
-                        binding.buttonStart.text = if (ready) {
-                            getString(R.string.action_running)
-                        } else {
-                            getString(R.string.action_start)
+                            binding.textStatus.text = getString(R.string.status_permissions_needed)
+                            binding.buttonStart.text = getString(R.string.action_start)
+                            binding.buttonStart.isEnabled = true
                         }
                     }
                 }
@@ -143,7 +170,7 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
-    // region Izin akisi
+    // region İzin akışı
 
     private fun beginPermissionFlow() {
         if (!PermissionUtils.canDrawOverlays(this)) {
@@ -164,20 +191,28 @@ class MainActivity : AppCompatActivity() {
                 )
                 try {
                     overlayPermissionLauncher.launch(intent)
+                    // isStartInProgress = true olarak kalır; launcher callback'i sıfırlayacak
                 } catch (e: Exception) {
                     e.printStackTrace()
+                    isStartInProgress = false
                     showInfoDialog(
                         getString(R.string.error_generic_title),
                         getString(R.string.error_overlay_settings_unavailable)
                     )
                 }
             }
-            .setNegativeButton(R.string.action_cancel, null)
+            .setNegativeButton(R.string.action_cancel) { _, _ ->
+                isStartInProgress = false
+            }
+            .setOnCancelListener {
+                isStartInProgress = false
+            }
             .show()
     }
 
     private fun proceedAfterOverlayCheck() {
         if (!PermissionUtils.canDrawOverlays(this)) {
+            isStartInProgress = false
             showInfoDialog(
                 getString(R.string.permission_overlay_title),
                 getString(R.string.permission_overlay_denied_message)
@@ -188,13 +223,20 @@ class MainActivity : AppCompatActivity() {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU &&
             !PermissionUtils.hasNotificationPermission(this)
         ) {
+            // notificationPermissionLauncher callback'i isStartInProgress'i sıfırlayacak
             notificationPermissionLauncher.launch(android.Manifest.permission.POST_NOTIFICATIONS)
             return
         }
+        isStartInProgress = false
         startOverlayService()
     }
 
     private fun startOverlayService() {
+        // Servis zaten çalışıyorsa tekrar başlatma (race condition koruması)
+        if (FloatingOverlayService.isRunning) {
+            viewModel.refreshStatus()
+            return
+        }
         try {
             val intent = Intent(this, FloatingOverlayService::class.java)
             ContextCompat.startForegroundService(this, intent)
@@ -204,10 +246,14 @@ class MainActivity : AppCompatActivity() {
                 getString(R.string.error_generic_title),
                 getString(R.string.error_service_start_failed)
             )
-        } finally {
             viewModel.refreshStatus()
-            binding.root.postDelayed({ viewModel.refreshStatus() }, 400L)
+            return
         }
+        // Servis başladıktan sonra durumu güncelle; onCreate içindeki isRunning=true
+        // ile senkronize olmak için kısa bir gecikme ile ikinci bir kontrol yap.
+        viewModel.refreshStatus()
+        binding.root.postDelayed({ viewModel.refreshStatus() }, 300L)
+        binding.root.postDelayed({ viewModel.refreshStatus() }, 800L)
     }
 
     private fun showInfoDialog(title: String, message: String) {
@@ -220,3 +266,4 @@ class MainActivity : AppCompatActivity() {
 
     // endregion
 }
+
