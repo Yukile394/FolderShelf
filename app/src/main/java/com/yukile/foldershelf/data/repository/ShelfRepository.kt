@@ -25,6 +25,16 @@ import kotlinx.coroutines.withContext
  * MainActivity/ShelfListActivity/SettingsActivity hem de
  * FloatingOverlayService ve PickerActivity ayni veriyi gorsun.
  */
+/**
+ * addItemFromUri() cagrisinin sonucu. Cagiran taraf (FloatingOverlayService,
+ * ShelfListActivity, PickerActivity) buna gore farkli geri bildirim
+ * gosterebilir (orn. "Eklendi" / "Zaten ekliydi, guncellendi").
+ */
+enum class AddItemResult {
+    ADDED,
+    ALREADY_EXISTS
+}
+
 class ShelfRepository private constructor(
     private val storage: ShelfStorage
 ) {
@@ -42,8 +52,8 @@ class ShelfRepository private constructor(
         }
     }
 
-    suspend fun addItemFromUri(context: Context, uri: Uri, type: ItemType) {
-        withContext(Dispatchers.IO) {
+    suspend fun addItemFromUri(context: Context, uri: Uri, type: ItemType): AddItemResult {
+        return withContext(Dispatchers.IO) {
             // ONEMLI: "type" caller tarafindan bir tahmindir (ozellikle
             // surukle-birak akisinda). Surukle-birakla gelen URI'ler cogu
             // zaman gercek bir "tree" URI degil, duz bir "document" URI'dir;
@@ -58,16 +68,35 @@ class ShelfRepository private constructor(
                 ?: uri.lastPathSegment
                 ?: context.getString(R.string.unnamed_item)
 
+            val uriString = uri.toString()
+            val current = storage.readAll()
+
+            // Ayni klasor/dosya (ayni URI) zaten raftaysa tekrar eklemek
+            // yerine mevcut kaydi "en ustte" gorunecek sekilde tazeleyip
+            // (addedAt guncellenir) cagirana ALREADY_EXISTS donuyoruz.
+            val existing = current.firstOrNull { it.uri == uriString }
+            if (existing != null) {
+                val refreshed = existing.copy(
+                    displayName = name,
+                    addedAt = System.currentTimeMillis()
+                )
+                val updated = current.map { if (it.id == existing.id) refreshed else it }
+                storage.writeAll(updated)
+                _items.value = updated.sortedByDescending { it.addedAt }
+                return@withContext AddItemResult.ALREADY_EXISTS
+            }
+
             val newItem = ShelfItem(
                 id = storage.nextId(),
-                uri = uri.toString(),
+                uri = uriString,
                 displayName = name,
                 type = resolvedType,
                 addedAt = System.currentTimeMillis()
             )
-            val updated = storage.readAll() + newItem
+            val updated = current + newItem
             storage.writeAll(updated)
             _items.value = updated.sortedByDescending { it.addedAt }
+            AddItemResult.ADDED
         }
     }
 
