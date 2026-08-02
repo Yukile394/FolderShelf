@@ -141,7 +141,15 @@ class ShelfListActivity : AppCompatActivity() {
                     uri,
                     android.content.Intent.FLAG_GRANT_READ_URI_PERMISSION
                 )
-                viewModel.addFromDrop(uri)
+                viewModel.addFromDrop(uri) { result ->
+                    val messageRes = when (result) {
+                        com.yukile.foldershelf.data.repository.AddItemResult.ADDED ->
+                            R.string.drop_zone_added_toast
+                        com.yukile.foldershelf.data.repository.AddItemResult.ALREADY_EXISTS ->
+                            R.string.drop_already_exists_toast
+                    }
+                    Toast.makeText(this, messageRes, Toast.LENGTH_SHORT).show()
+                }
                 addedAny = true
             } catch (e: SecurityException) {
                 e.printStackTrace()
@@ -149,10 +157,31 @@ class ShelfListActivity : AppCompatActivity() {
                 e.printStackTrace()
             }
         }
-        if (addedAny) {
-            Toast.makeText(this, R.string.drop_zone_added_toast, Toast.LENGTH_SHORT).show()
+        if (!addedAny) {
+            Toast.makeText(this, R.string.error_generic_title, Toast.LENGTH_SHORT).show()
         }
         hideDropZone()
+    }
+
+    override fun onResume() {
+        super.onResume()
+        // "+ simgesi kayboluyor" sikayetine karsi guvenlik agi: Dosyalar
+        // ekranina her donuste, servis calisiyorsa ve balon gizli
+        // birakilmamissa, balonun gercekten ekranda oldugundan emin ol.
+        // Balon zaten ayri bir sistem penceresi (TYPE_APPLICATION_OVERLAY)
+        // oldugu icin normalde bu ekranin uzerinde kalir; bu sadece ekstra
+        // guvence.
+        if (com.yukile.foldershelf.overlay.FloatingOverlayService.isRunning) {
+            val prefs = com.yukile.foldershelf.util.PreferenceHelper(this)
+            if (!prefs.isBubbleHidden) {
+                startService(
+                    android.content.Intent(
+                        this,
+                        com.yukile.foldershelf.overlay.FloatingOverlayService::class.java
+                    ).setAction(com.yukile.foldershelf.util.Constants.ACTION_SHOW_BUBBLE)
+                )
+            }
+        }
     }
 
     private fun applyEdgeToEdgeInsets() {
