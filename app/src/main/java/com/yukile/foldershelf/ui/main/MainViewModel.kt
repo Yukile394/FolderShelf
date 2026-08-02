@@ -15,18 +15,21 @@ import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 
 /**
- * MainActivity ekraninin durumunu tutar: gerekli izinlerin verilip
- * verilmedigi ve raftaki oge sayisi gibi kucuk, goruntulenebilir bilgiler.
- * Izin isteme akisinin kendisi (sonuc callback'leri) Android API'lerine
- * (Activity) baglandigi icin bilerek View katmaninda (MainActivity)
- * birakildi; bu, MVVM icinde kabul goren bir ayrimdir.
+ * MainActivity ekranının durumunu tutar.
+ *
+ * isRunning → servis gerçekten çalışıyor MU?
+ *   (izinler tamam VE FloatingOverlayService.isRunning == true)
+ *
+ * Eski isReady StateFlow'u isRunning olarak yeniden adlandırıldı çünkü
+ * "izinler tamam ama servis çalışmıyor" durumu kullanıcı için anlamsız;
+ * buton her zaman "Başlat" göstermeli, tıklanınca servis başlamalı.
  */
 class MainViewModel(application: Application) : AndroidViewModel(application) {
 
     private val repository = ShelfRepository.getInstance(application)
 
-    private val _isReady = MutableStateFlow(false)
-    val isReady: StateFlow<Boolean> = _isReady.asStateFlow()
+    private val _isRunning = MutableStateFlow(false)
+    val isRunning: StateFlow<Boolean> = _isRunning.asStateFlow()
 
     val itemCount: StateFlow<Int> = repository.items
         .map { it.size }
@@ -39,13 +42,12 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
         refreshStatus()
     }
 
+    /**
+     * Servis durumunu anlık olarak okuyup UI'ı günceller.
+     * MainActivity.onResume() ve startOverlayService() tarafından çağrılır.
+     */
     fun refreshStatus() {
         val permissionsOk = PermissionUtils.allRequiredPermissionsGranted(getApplication())
-        // Izinler yeterli DEGIL - buton kesinlikle "Baslat" gostermeli.
-        // Izinler yeterli AMA servis fiilen calismiyorsa da (ör. servis
-        // beklenmedik sekilde durduysa) "Baslat" gostermeliyiz; aksi
-        // halde kullanici butona basmadan hicbir sey olmuyormus gibi
-        // gorunur ("calisiyor" yazar ama + ekranda yok).
-        _isReady.value = permissionsOk && FloatingOverlayService.isRunning
+        _isRunning.value = permissionsOk && FloatingOverlayService.isRunning
     }
 }
