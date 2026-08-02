@@ -62,6 +62,8 @@
 
     <!-- Yonetim listesi -->
     <string name="shelf_empty_state">Nothing here yet.\nUse the + bubble\'s menu to add a folder or file.</string>
+    <string name="drop_zone_hint">Drop here to add to FolderShelf</string>
+    <string name="drop_zone_added_toast">Added</string>
     <string name="shelf_item_subtitle">%1$s \u2022 %2$d files</string>
     <string name="shelf_item_subtitle_pending">Calculating\u2026</string>
     <string name="confirm_delete_message">Remove \"%1$s\" from FolderShelf? The original files on your device will not be deleted.</string>
