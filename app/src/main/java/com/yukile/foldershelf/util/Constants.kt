@@ -11,6 +11,7 @@ object Constants {
     const val NOTIFICATION_CHANNEL_ID = "folder_shelf_overlay_channel"
     const val NOTIFICATION_ID = 1001
     const val DRAG_NOTICE_ID = 1002
+    const val ADD_NOTICE_ID = 1003
 
     // FloatingOverlayService aksiyonlari
     const val ACTION_HIDE_BUBBLE = "com.yukile.foldershelf.action.HIDE_BUBBLE"
