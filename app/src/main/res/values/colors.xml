@@ -16,6 +16,9 @@
     <color name="surface_container_high_light">#EDEFF3</color>
     <color name="outline_variant_light">#C2C7CF</color>
     <color name="error_light">#BA1A1A</color>
+    <color name="success_light">#2E7D32</color>
+    <color name="warning_light">#F9A825</color>
+    <color name="drop_highlight_light">#0D47A1</color>
 
     <!-- Koyu tema -->
     <color name="primary_dark">#9ECAFF</color>
