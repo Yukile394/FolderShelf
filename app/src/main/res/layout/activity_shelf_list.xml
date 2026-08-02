@@ -42,4 +42,54 @@
         android:textColor="?attr/colorOnSurfaceVariant"
         android:visibility="gone" />
 
+    <!--
+        Surukle-birak "drop zone" katmani. Baska bir uygulamadan (orn. dosya
+        yoneticisi) bu ekrana bir dosya/klasor suruklendiginde gorunur hale
+        gelir; GitHub'daki dosya yukleme kutusuna benzer sekilde kesikli
+        kenarlikli ve "+" simgeli bir alan gosterir. Varsayilan olarak gizli
+        ve dokunmalari alttaki listeye gecirir (clickable=false).
+    -->
+    <FrameLayout
+        android:id="@+id/dropZoneOverlay"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:background="#99000000"
+        android:visibility="gone"
+        android:clickable="false"
+        android:focusable="false"
+        android:padding="28dp">
+
+        <LinearLayout
+            android:id="@+id/dropZoneCard"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:layout_gravity="center"
+            android:background="@drawable/bg_drop_zone"
+            android:orientation="vertical"
+            android:gravity="center"
+            android:clickable="false"
+            android:focusable="false">
+
+            <ImageView
+                android:layout_width="52dp"
+                android:layout_height="52dp"
+                android:src="@drawable/ic_add"
+                app:tint="?attr/colorPrimary"
+                android:contentDescription="@string/drop_zone_hint" />
+
+            <TextView
+                android:id="@+id/textDropZoneHint"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="12dp"
+                android:paddingHorizontal="32dp"
+                android:gravity="center"
+                android:text="@string/drop_zone_hint"
+                android:textAppearance="?attr/textAppearanceTitleMedium"
+                android:textColor="?attr/colorPrimary" />
+
+        </LinearLayout>
+
+    </FrameLayout>
+
 </androidx.coordinatorlayout.widget.CoordinatorLayout>
