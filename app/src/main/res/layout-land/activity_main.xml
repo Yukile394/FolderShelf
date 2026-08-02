@@ -8,8 +8,6 @@
     android:layout_height="match_parent"
     android:background="?attr/colorSurface">
 
-    <!-- Yatay (landscape) modda logo/baslik solda, aksiyonlar sagda -->
-
     <ImageView
         android:id="@+id/imageLogo"
         android:layout_width="64dp"
@@ -72,13 +70,16 @@
 
     <com.google.android.material.button.MaterialButton
         android:id="@+id/buttonStart"
-        android:layout_width="140dp"
-        android:layout_height="140dp"
+        android:layout_width="120dp"
+        android:layout_height="120dp"
         android:text="@string/action_start"
-        app:cornerRadius="70dp"
-        app:icon="@drawable/ic_add"
+        android:textSize="13sp"
+        android:gravity="center"
+        app:cornerRadius="20dp"
+        app:icon="@drawable/ic_bolt"
         app:iconGravity="textTop"
-        app:iconSize="32dp"
+        app:iconSize="36dp"
+        app:iconPadding="6dp"
         app:layout_constraintTop_toTopOf="parent"
         app:layout_constraintBottom_toTopOf="@id/buttonManage"
         app:layout_constraintStart_toEndOf="@id/guidelineCenter"
