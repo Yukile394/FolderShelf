@@ -80,6 +80,26 @@ class ShelfListViewModel(application: Application) : AndroidViewModel(applicatio
         }
     }
 
+    /**
+     * Baska bir uygulamadan (dosya yoneticisi vb.) surukle-birak ile
+     * gelen bir URI'yi rafa ekler. Turu (dosya/klasor) kesin bilinmedigi
+     * icin FOLDER tahmini gonderilir; repository gercek turu URI'nin
+     * kendisinden (docFile.isDirectory) guvenli sekilde cozer.
+     */
+    fun addFromDrop(uri: android.net.Uri) {
+        viewModelScope.launch {
+            try {
+                repository.addItemFromUri(
+                    getApplication(),
+                    uri,
+                    com.yukile.foldershelf.data.model.ItemType.FOLDER
+                )
+            } catch (e: Exception) {
+                e.printStackTrace()
+            }
+        }
+    }
+
     override fun onCleared() {
         super.onCleared()
         refreshJobs.values.forEach { it.cancel() }
