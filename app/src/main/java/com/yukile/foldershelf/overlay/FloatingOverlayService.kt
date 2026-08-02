@@ -12,6 +12,7 @@ import android.graphics.PixelFormat
 import android.os.Build
 import android.os.IBinder
 import android.provider.Settings
+import android.util.Log
 import android.view.DragEvent
 import android.view.Gravity
 import android.view.LayoutInflater
@@ -37,23 +38,6 @@ import kotlinx.coroutines.cancel
 import kotlinx.coroutines.launch
 import kotlin.math.abs
 
-/**
- * FloatingOverlayService
- *
- * Ekranin kenarina yapisan, suruklenebilir "+" balonunu ve acilir menuyu
- * WindowManager uzerinden yonetir. Bir Activity'ye degil dogrudan bu
- * Service'e bagli oldugu icin, kullanici "Kapat" demedigi surece (veya
- * sistem bellek nedeniyle servisi sonlandirmadikca) uygulama ekrani
- * kapatilsa bile calismaya devam eder.
- *
- * SURUKLE-BIRAK NOTU: Dosya yoneticisi gibi baska bir uygulamadan
- * dogrudan klasor surukleyip bu balonun uzerine birakma ozelligi,
- * Android'in genel (global/cross-app) surukle-birak altyapisina
- * dayanir ve kaynak uygulamanin bunu desteklemesini gerektirir. Butun
- * dosya yoneticileri bunu desteklemez; bu yuzden bu ozellik "best effort"
- * (en iyi caba) olarak sunulur ve calismadigi durumlarda kullaniciya
- * "Klasor Sec" / "Dosya Sec" (her zaman calisan sistem secici) onerilir.
- */
 class FloatingOverlayService : Service() {
 
     private lateinit var windowManager: WindowManager
@@ -69,7 +53,6 @@ class FloatingOverlayService : Service() {
 
     private val serviceScope = CoroutineScope(SupervisorJob() + Dispatchers.Main)
 
-    // Dokunma/surukleme takibi
     private var downX = 0
     private var downY = 0
     private var downTouchX = 0f
@@ -86,44 +69,62 @@ class FloatingOverlayService : Service() {
     }
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
-        // ONEMLI: startForeground() HER onStartCommand cagrisinda, action ne
-        // olursa olsun, en basta cagrilmali. Eskiden SHOW/HIDE_BUBBLE
-        // aksiyonlarinda bu satira hic ulasilmiyordu; bu da servisin bazen
-        // "foreground" durumuna hic gecmemesine ve MainActivity "Calisiyor"
-        // yazsa bile balonun (+ simgesi) gercekte hic eklenmemis olmasina
-        // (ya da sessizce kapanmasina) yol aciyordu.
-        startForeground(Constants.NOTIFICATION_ID, buildNotification())
+        // Bu metodun ICI artik tamamen try/catch ile sarili. Eskiden
+        // startForeground()/addBubble() burada korumasizdi; biri hata
+        // firlatinca tum uygulama sureci cokup kullaniciyi ana ekrana
+        // atiyordu - "Baslat'a basinca uygulamadan atiyor" sikayetinin
+        // asil sebebi buydu.
+        return try {
+            startForegroundSafely()
 
-        if (!Settings.canDrawOverlays(this)) {
-            // Izin sonradan geri alinmis olabilir; guvenli sekilde dur.
-            stopSelf()
-            return START_NOT_STICKY
-        }
-
-        when (intent?.action) {
-            Constants.ACTION_HIDE_BUBBLE -> {
-                hideBubble()
-                return START_STICKY
-            }
-            Constants.ACTION_SHOW_BUBBLE -> {
-                showBubble()
-                return START_STICKY
-            }
-            Constants.ACTION_UPDATE_BUBBLE_SIZE -> {
-                applyBubbleSize(prefs.bubbleSizeDp)
-                return START_STICKY
-            }
-            Constants.ACTION_STOP_SERVICE -> {
+            if (!Settings.canDrawOverlays(this)) {
                 stopSelf()
                 return START_NOT_STICKY
             }
-        }
 
-        if (!isBubbleAdded) {
-            addBubble()
-        }
+            when (intent?.action) {
+                Constants.ACTION_HIDE_BUBBLE -> {
+                    hideBubble()
+                    return START_STICKY
+                }
+                Constants.ACTION_SHOW_BUBBLE -> {
+                    showBubble()
+                    return START_STICKY
+                }
+                Constants.ACTION_UPDATE_BUBBLE_SIZE -> {
+                    applyBubbleSize(prefs.bubbleSizeDp)
+                    return START_STICKY
+                }
+                Constants.ACTION_STOP_SERVICE -> {
+                    stopSelf()
+                    return START_NOT_STICKY
+                }
+            }
 
-        return START_STICKY
+            if (!isBubbleAdded) {
+                addBubble()
+            }
+
+            START_STICKY
+        } catch (e: Exception) {
+            Log.e(TAG, "onStartCommand hata", e)
+            try {
+                stopForeground(STOP_FOREGROUND_REMOVE)
+            } catch (inner: Exception) {
+                Log.e(TAG, "stopForeground hata", inner)
+            }
+            stopSelf()
+            START_NOT_STICKY
+        }
+    }
+
+    private fun startForegroundSafely() {
+        try {
+            startForeground(Constants.NOTIFICATION_ID, buildNotification())
+        } catch (e: Exception) {
+            Log.e(TAG, "startForeground hata", e)
+            throw e
+        }
     }
 
     // region Bildirim
@@ -213,25 +214,17 @@ class FloatingOverlayService : Service() {
             }
             setBubbleStatus(ok = true)
         } catch (e: Exception) {
-            // Bazi OEM cihazlarda (ozellikle izin az once verilmisse) pencere
-            // ekleme gecikmeli basarisiz olabilir; servisi guvenle durdur.
             e.printStackTrace()
             stopSelf()
         }
     }
 
-    /**
-     * Balonun arka plan rengini calisma durumuna gore ayarlar:
-     * calisiyorsa mavi (colorPrimary), bir sorun olustuysa (izin kaybi,
-     * desteklenmeyen surukle-birak, beklenmeyen hata) kirmizi (colorError).
-     */
     private fun setBubbleStatus(ok: Boolean) {
         val binding = bubbleBinding ?: return
         val colorRes = if (ok) R.color.primary_light else R.color.error_light
         binding.root.setCardBackgroundColor(androidx.core.content.ContextCompat.getColor(this, colorRes))
     }
 
-    /** Kisa sureligine kirmizi gosterip sonra normale (mavi) doner. */
     private fun flashBubbleError() {
         setBubbleStatus(ok = false)
         bubbleBinding?.root?.postDelayed({ setBubbleStatus(ok = true) }, 1500L)
@@ -267,14 +260,9 @@ class FloatingOverlayService : Service() {
         refreshNotification()
     }
 
-    /** Balon boyutu ayarlar ekranindan degistirildiginde canli olarak uygular. */
     fun applyBubbleSize(newSizeDp: Int) {
         prefs.bubbleSizeDp = newSizeDp
         if (!isBubbleAdded || !::bubbleParams.isInitialized) {
-            // Balon henuz eklenmemis; bir sonraki addBubble() cagrisi
-            // zaten guncel boyutu prefs'ten okuyacak. Burada erken donmek
-            // "lateinit property bubbleParams has not been initialized"
-            // cokmesini engeller.
             return
         }
         val sizePx = dpToPx(prefs.bubbleSizeDp)
@@ -404,12 +392,6 @@ class FloatingOverlayService : Service() {
                 )
                 serviceScope.launch {
                     try {
-                        // Surukle-birak ile gelen bir URI genelde GERCEK
-                        // bir "tree" URI degildir (duz belge URI'sidir).
-                        // repository.addItemFromUri artik bunu guvenli
-                        // sekilde tespit ediyor (once tree dener, olmazsa
-                        // tekil belgeye duser) ve hicbir zaman exception
-                        // firlatmaz; yine de burada ek bir guvenlik agi var.
                         repository.addItemFromUri(applicationContext, uri, ItemType.FOLDER)
                     } catch (e: Exception) {
                         e.printStackTrace()
@@ -562,14 +544,10 @@ class FloatingOverlayService : Service() {
     }
 
     companion object {
+        private const val TAG = "FloatingOverlayService"
         private const val REQUEST_CODE_TOGGLE = 10
         private const val REQUEST_CODE_STOP = 11
 
-        /**
-         * Servisin gercekten canli olup olmadigini tutar. MainActivity
-         * bunu kullanarak "Calisiyor" durumunu sadece izinlere gore degil,
-         * balonun fiilen ekli olup olmadigina gore gosterebilir.
-         */
         @Volatile
         var isRunning: Boolean = false
             private set
