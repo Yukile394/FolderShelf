@@ -85,15 +85,23 @@ class ShelfListViewModel(application: Application) : AndroidViewModel(applicatio
      * gelen bir URI'yi rafa ekler. Turu (dosya/klasor) kesin bilinmedigi
      * icin FOLDER tahmini gonderilir; repository gercek turu URI'nin
      * kendisinden (docFile.isDirectory) guvenli sekilde cozer.
+     *
+     * @param onResult Ekleme sonucunu (yeni eklendi mi, zaten var miydi)
+     *   UI katmanina bildirmek icin cagirilir; boylece dogru Toast mesaji
+     *   gosterilebilir.
      */
-    fun addFromDrop(uri: android.net.Uri) {
+    fun addFromDrop(
+        uri: android.net.Uri,
+        onResult: (com.yukile.foldershelf.data.repository.AddItemResult) -> Unit = {}
+    ) {
         viewModelScope.launch {
             try {
-                repository.addItemFromUri(
+                val result = repository.addItemFromUri(
                     getApplication(),
                     uri,
                     com.yukile.foldershelf.data.model.ItemType.FOLDER
                 )
+                onResult(result)
             } catch (e: Exception) {
                 e.printStackTrace()
             }
