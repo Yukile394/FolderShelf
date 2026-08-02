@@ -22,11 +22,15 @@
     <string name="shelf_item_count_zero">Henuz oge yok</string>
 
     <string name="permission_overlay_title">Diger uygulamalarin uzerinde goster</string>
-    <string name="permission_overlay_message">FolderShelf\'in "+" simgesini diger uygulamalarin uzerinde gosterebilmesi icin izne ihtiyaci var. Bir sonraki ekranda FolderShelf icin "Diger uygulamalarin uzerinde goster" seceneğini acin.</string>
+    <string name="permission_overlay_message">FolderShelf\'in \"+\" simgesini diger uygulamalarin uzerinde gosterebilmesi icin izne ihtiyaci var. Bir sonraki ekranda FolderShelf icin \"Diger uygulamalarin uzerinde goster\" seceneğini acin.</string>
     <string name="permission_overlay_denied_message">Bu izin verilmeden yuzen simge gosterilemez. Istediginiz zaman tekrar Baslat\'a dokunarak izni verebilirsiniz.</string>
     <string name="permission_notification_title">Bildirim izni</string>
     <string name="permission_notification_message">Yuzen menu calisirken FolderShelf kalici bir bildirim gosterir; bu sayede istediginiz an gizleyebilir veya kapatabilirsiniz.</string>
     <string name="permission_notification_denied_message">Bildirim izni verilmese de servis calismaya devam eder, ancak bildirim alaninda gizle/kapat kontrollerini goremezsiniz.</string>
+    <string name="permission_notification_permanently_denied_message">Bildirim iznini daha once "Bir daha sorma" secenegiyle reddettiniz. Lutfen uygulama ayarlarindan elle acin.</string>
+    <string name="permission_all_title">Izinler gerekli</string>
+    <string name="permission_all_message">FolderShelf\'in calismasi icin iki izne ihtiyaci var:\n\n\u2022 Diger uygulamalarin uzerinde goster \u2014 yuzen + simgesini gostermek icin\n\u2022 Bildirimler \u2014 calisma durumunu ve gizle/kapat kontrollerini gostermek icin\n\nSonraki ekranlarda lutfen ikisine de izin verin.</string>
+    <string name="action_open_settings">Ayarlari ac</string>
 
     <string name="error_generic_title">Bir sorun olustu</string>
     <string name="error_overlay_settings_unavailable">Bu cihazda izin ekrani acilamadi.</string>
@@ -48,12 +52,12 @@
     <string name="menu_recent">Son Eklenenler</string>
     <string name="menu_settings">Ayarlar</string>
     <string name="menu_close">Kapat</string>
-    <string name="drag_unsupported_message">Bu uygulamadan dogrudan FolderShelf\'e surukleme desteklenmiyor. Lutfen "Klasor Sec" veya "Dosya Sec" secenegini kullanin.</string>
+    <string name="drag_unsupported_message">Bu uygulamadan dogrudan FolderShelf\'e surukleme desteklenmiyor. Lutfen \"Klasor Sec\" veya \"Dosya Sec\" secenegini kullanin.</string>
 
     <string name="shelf_empty_state">Henuz bir sey yok.\n+ simgesinin menusunden klasor veya dosya ekleyin.</string>
     <string name="shelf_item_subtitle">%1$s \u2022 %2$d dosya</string>
     <string name="shelf_item_subtitle_pending">Hesaplaniyor\u2026</string>
-    <string name="confirm_delete_message">"%1$s" FolderShelf\'ten kaldirilsin mi? Cihazinizdaki orijinal dosyalar silinmez.</string>
+    <string name="confirm_delete_message">\"%1$s\" FolderShelf\'ten kaldirilsin mi? Cihazinizdaki orijinal dosyalar silinmez.</string>
     <string name="share_empty_message">Bu ogede paylasilacak dosya bulunmuyor.</string>
     <string name="type_folder">Klasor</string>
     <string name="type_file">Dosya</string>
