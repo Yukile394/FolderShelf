@@ -38,4 +38,21 @@ object PermissionUtils {
     fun allRequiredPermissionsGranted(context: Context): Boolean {
         return canDrawOverlays(context) && hasNotificationPermission(context)
     }
+
+    /**
+     * Kullanıcı bildirim iznini "Bir daha sorma" ile kalıcı olarak
+     * reddettiyse true döner. Bu durumda sistem izin diyaloğu tekrar
+     * gösterilmez (sessizce false döner), bu yüzden kullanıcıyı doğrudan
+     * uygulama ayarlarına yönlendirmemiz gerekir.
+     */
+    fun isNotificationPermissionPermanentlyDenied(
+        activity: android.app.Activity,
+        alreadyRequestedBefore: Boolean
+    ): Boolean {
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.TIRAMISU) return false
+        if (hasNotificationPermission(activity)) return false
+        val shouldShowRationale = androidx.core.app.ActivityCompat
+            .shouldShowRequestPermissionRationale(activity, Manifest.permission.POST_NOTIFICATIONS)
+        return alreadyRequestedBefore && !shouldShowRationale
+    }
 }
