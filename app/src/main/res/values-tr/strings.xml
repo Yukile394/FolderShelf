@@ -31,6 +31,9 @@
     <string name="error_generic_title">Bir sorun olustu</string>
     <string name="error_overlay_settings_unavailable">Bu cihazda izin ekrani acilamadi.</string>
     <string name="error_service_start_failed">Yuzen menu servisi baslatilamadi. Lutfen tekrar deneyin.</string>
+    <string name="action_copy">Kopyala</string>
+    <string name="crash_dialog_title">Bir hatadan sonra uygulama yeniden baslatildi</string>
+    <string name="crash_copied_toast">Hata gunlugu kopyalandi</string>
 
     <string name="notification_channel_name">Yuzen menu</string>
     <string name="notification_channel_description">Yuzen klasor rafinin calisma durumunu gosterir</string>
