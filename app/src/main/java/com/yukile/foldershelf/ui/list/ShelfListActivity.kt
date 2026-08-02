@@ -2,8 +2,10 @@ package com.yukile.foldershelf.ui.list
 
 import android.net.Uri
 import android.os.Bundle
+import android.view.DragEvent
 import android.view.View
 import android.widget.EditText
+import android.widget.Toast
 import androidx.activity.viewModels
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
@@ -44,7 +46,113 @@ class ShelfListActivity : AppCompatActivity() {
         binding.toolbar.setNavigationOnClickListener { onBackPressedDispatcher.onBackPressed() }
 
         setupRecyclerView()
+        setupDragAndDrop()
         observeViewModel()
+    }
+
+    // -----------------------------------------------------------------------
+    // Surukle-birak ("drop zone")
+    // -----------------------------------------------------------------------
+    //
+    // GitHub'in dosya yukleme kutusuna benzer bir davranis: Baska bir
+    // uygulamadan (dosya yoneticisi vb.) bir dosya/klasor bu ekranin
+    // uzerine suruklendiginde, tum ekranin uzerinde kesikli kenarlikli,
+    // "+" simgeli yari saydam bir "buraya birakin" katmani belirir.
+    // Birakildiginda oge rafa eklenir ve katman kaybolur; eklenen oge
+    // liste zaten reaktif oldugu icin (StateFlow) hemen listede gorunur
+    // ve "orda kalir".
+
+    private fun setupDragAndDrop() {
+        // Kesikli (dashed) kenarlik donanim hizlandirmali katmanlarda
+        // duzgun cizilmeyebilir; yazilim katmanina zorla.
+        binding.dropZoneCard.setLayerType(View.LAYER_TYPE_SOFTWARE, null)
+
+        binding.root.setOnDragListener { _, event ->
+            when (event.action) {
+                DragEvent.ACTION_DRAG_STARTED -> {
+                    // Sadece dosya/klasor URI'si tasiyan surukleme
+                    // islemlerini kabul et.
+                    val accepts = event.clipDescription?.hasMimeType("*/*") == true
+                    if (accepts) showDropZone()
+                    accepts
+                }
+                DragEvent.ACTION_DRAG_ENTERED -> {
+                    highlightDropZone(entered = true)
+                    true
+                }
+                DragEvent.ACTION_DRAG_EXITED -> {
+                    highlightDropZone(entered = false)
+                    true
+                }
+                DragEvent.ACTION_DROP -> {
+                    handleDrop(event)
+                    true
+                }
+                DragEvent.ACTION_DRAG_ENDED -> {
+                    hideDropZone()
+                    true
+                }
+                else -> true
+            }
+        }
+    }
+
+    private fun showDropZone() {
+        binding.dropZoneOverlay.apply {
+            alpha = 0f
+            visibility = View.VISIBLE
+            animate().alpha(1f).setDuration(150L).start()
+        }
+        highlightDropZone(entered = false)
+    }
+
+    private fun hideDropZone() {
+        binding.dropZoneOverlay.animate()
+            .alpha(0f)
+            .setDuration(150L)
+            .withEndAction { binding.dropZoneOverlay.visibility = View.GONE }
+            .start()
+    }
+
+    private fun highlightDropZone(entered: Boolean) {
+        // Uzerine gelindiginde kart biraz buyur ve daha az saydam olur;
+        // tam olarak GitHub'daki mavi vurgulu kutuya benzer bir his verir.
+        val targetScale = if (entered) 1.03f else 1f
+        val targetAlpha = if (entered) 1f else 0.85f
+        binding.dropZoneCard.animate()
+            .scaleX(targetScale)
+            .scaleY(targetScale)
+            .alpha(targetAlpha)
+            .setDuration(120L)
+            .start()
+    }
+
+    private fun handleDrop(event: DragEvent) {
+        val clipData = event.clipData
+        if (clipData == null || clipData.itemCount == 0) {
+            hideDropZone()
+            return
+        }
+        var addedAny = false
+        for (i in 0 until clipData.itemCount) {
+            val uri = clipData.getItemAt(i).uri ?: continue
+            try {
+                contentResolver.takePersistableUriPermission(
+                    uri,
+                    android.content.Intent.FLAG_GRANT_READ_URI_PERMISSION
+                )
+                viewModel.addFromDrop(uri)
+                addedAny = true
+            } catch (e: SecurityException) {
+                e.printStackTrace()
+            } catch (e: Exception) {
+                e.printStackTrace()
+            }
+        }
+        if (addedAny) {
+            Toast.makeText(this, R.string.drop_zone_added_toast, Toast.LENGTH_SHORT).show()
+        }
+        hideDropZone()
     }
 
     private fun applyEdgeToEdgeInsets() {
