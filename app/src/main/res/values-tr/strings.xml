@@ -57,6 +57,7 @@
     <string name="shelf_empty_state">Henuz bir sey yok.\n+ simgesinin menusunden klasor veya dosya ekleyin.</string>
     <string name="drop_zone_hint">Eklemek icin buraya birakin</string>
     <string name="drop_zone_added_toast">Eklendi</string>
+    <string name="drop_already_exists_toast">Zaten ekliydi \u2014 guncellendi</string>
     <string name="shelf_item_subtitle">%1$s \u2022 %2$d dosya</string>
     <string name="shelf_item_subtitle_pending">Hesaplaniyor\u2026</string>
     <string name="confirm_delete_message">\"%1$s\" FolderShelf\'ten kaldirilsin mi? Cihazinizdaki orijinal dosyalar silinmez.</string>
