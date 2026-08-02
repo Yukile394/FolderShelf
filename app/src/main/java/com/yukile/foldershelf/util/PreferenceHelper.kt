@@ -43,6 +43,12 @@ class PreferenceHelper(context: Context) {
         get() = prefs.getString(KEY_THEME_MODE, THEME_SYSTEM) ?: THEME_SYSTEM
         set(value) = prefs.edit().putString(KEY_THEME_MODE, value).apply()
 
+    // Bildirim izni sistem diyaloğu daha önce en az bir kez gösterildi mi?
+    // "Bir daha sorma" (kalıcı ret) durumunu tespit edebilmek için gerekli.
+    var notificationPermissionRequestedBefore: Boolean
+        get() = prefs.getBoolean(KEY_NOTIF_REQUESTED, false)
+        set(value) = prefs.edit().putBoolean(KEY_NOTIF_REQUESTED, value).apply()
+
     companion object {
         private const val KEY_BUBBLE_X = "bubble_x"
         private const val KEY_BUBBLE_Y = "bubble_y"
@@ -50,6 +56,7 @@ class PreferenceHelper(context: Context) {
         private const val KEY_BUBBLE_HIDDEN = "bubble_hidden"
         private const val KEY_BUBBLE_LEFT_EDGE = "bubble_left_edge"
         private const val KEY_THEME_MODE = "theme_mode"
+        private const val KEY_NOTIF_REQUESTED = "notif_permission_requested"
 
         const val THEME_SYSTEM = "system"
         const val THEME_LIGHT = "light"
