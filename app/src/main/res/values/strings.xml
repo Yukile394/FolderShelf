@@ -35,6 +35,9 @@
     <string name="error_generic_title">Something went wrong</string>
     <string name="error_overlay_settings_unavailable">Could not open the overlay permission screen on this device.</string>
     <string name="error_service_start_failed">The floating shelf service could not be started. Please try again.</string>
+    <string name="action_copy">Copy</string>
+    <string name="crash_dialog_title">The app restarted after an error</string>
+    <string name="crash_copied_toast">Error log copied</string>
 
     <!-- Bildirim -->
     <string name="notification_channel_name">Floating shelf</string>
