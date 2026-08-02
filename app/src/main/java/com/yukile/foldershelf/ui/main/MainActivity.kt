@@ -1,10 +1,14 @@
 package com.yukile.foldershelf.ui.main
 
+import android.content.ClipData
+import android.content.ClipboardManager
+import android.content.Context
 import android.content.Intent
 import android.net.Uri
 import android.os.Build
 import android.os.Bundle
 import android.provider.Settings
+import android.widget.Toast
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.activity.viewModels
 import androidx.appcompat.app.AlertDialog
@@ -20,18 +24,10 @@ import com.yukile.foldershelf.databinding.ActivityMainBinding
 import com.yukile.foldershelf.overlay.FloatingOverlayService
 import com.yukile.foldershelf.ui.list.ShelfListActivity
 import com.yukile.foldershelf.ui.settings.SettingsActivity
+import com.yukile.foldershelf.util.CrashHandler
 import com.yukile.foldershelf.util.PermissionUtils
 import kotlinx.coroutines.launch
 
-/**
- * MainActivity
- *
- * Uygulamanin ana ekrani. Tek is: kullaniciyi "Baslat" butonuyla
- * karsilamak, gerekli izinleri (once diger uygulamalarin uzerinde
- * gosterme, ardindan -Android 13+ icin- bildirim izni) sirayla ve
- * anlasilir aciklamalarla istemek, ve her ikisi de verildiginde
- * FloatingOverlayService'i baslatmak.
- */
 class MainActivity : AppCompatActivity() {
 
     private lateinit var binding: ActivityMainBinding
@@ -40,7 +36,6 @@ class MainActivity : AppCompatActivity() {
     private val overlayPermissionLauncher = registerForActivityResult(
         ActivityResultContracts.StartActivityForResult()
     ) {
-        // Kullanici ayarlar ekranindan donduginde tekrar kontrol et.
         proceedAfterOverlayCheck()
     }
 
@@ -74,6 +69,37 @@ class MainActivity : AppCompatActivity() {
         }
 
         observeViewModel()
+        maybeShowCrashDialog()
+    }
+
+    private fun maybeShowCrashDialog() {
+        val crashed = intent?.getBooleanExtra(CrashHandler.EXTRA_CRASHED, false) == true
+        if (!crashed) return
+        intent.removeExtra(CrashHandler.EXTRA_CRASHED)
+
+        val log = CrashHandler.latestCrashLog(this) ?: return
+        AlertDialog.Builder(this)
+            .setTitle(R.string.crash_dialog_title)
+            .setMessage(log.take(4000))
+            .setPositiveButton(R.string.action_copy) { _, _ ->
+                val clipboard = getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
+                clipboard.setPrimaryClip(ClipData.newPlainText("crash_log", log))
+                Toast.makeText(this, R.string.crash_copied_toast, Toast.LENGTH_SHORT).show()
+            }
+            .setNeutralButton(R.string.action_share) { _, _ ->
+                val shareIntent = Intent(Intent.ACTION_SEND).apply {
+                    type = "text/plain"
+                    putExtra(Intent.EXTRA_TEXT, log)
+                }
+                try {
+                    startActivity(Intent.createChooser(shareIntent, getString(R.string.action_share)))
+                } catch (e: Exception) {
+                    e.printStackTrace()
+                }
+            }
+            .setNegativeButton(R.string.action_ok, null)
+            .setCancelable(true)
+            .show()
     }
 
     override fun onResume() {
@@ -152,7 +178,6 @@ class MainActivity : AppCompatActivity() {
 
     private fun proceedAfterOverlayCheck() {
         if (!PermissionUtils.canDrawOverlays(this)) {
-            // Kullanici izni vermedi; zorlamiyoruz, sadece bilgilendiriyoruz.
             showInfoDialog(
                 getString(R.string.permission_overlay_title),
                 getString(R.string.permission_overlay_denied_message)
@@ -181,9 +206,6 @@ class MainActivity : AppCompatActivity() {
             )
         } finally {
             viewModel.refreshStatus()
-            // Servis onCreate/onStartCommand main looper'a asenkron olarak
-            // gonderilir; buton metninin "Calisiyor"a hemen guncellenmesi
-            // icin kisa bir gecikmeyle tekrar kontrol ediyoruz.
             binding.root.postDelayed({ viewModel.refreshStatus() }, 400L)
         }
     }
