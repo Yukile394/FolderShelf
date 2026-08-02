@@ -30,6 +30,10 @@
     <string name="permission_notification_title">Notification permission</string>
     <string name="permission_notification_message">FolderShelf shows a persistent notification while the floating shelf is active, so you can hide or close it at any time.</string>
     <string name="permission_notification_denied_message">Without notification permission the service can still run, but you will not see the hide/close controls in your notification shade.</string>
+    <string name="permission_notification_permanently_denied_message">You previously denied notification permission and chose \"Don\'t ask again\". Please enable it manually from app settings.</string>
+    <string name="permission_all_title">Permissions needed</string>
+    <string name="permission_all_message">FolderShelf needs two permissions to run:\n\n\u2022 Display over other apps \u2014 to show the floating + bubble\n\u2022 Notifications \u2014 to show the ongoing status and hide/close controls\n\nOn the next screens, please allow both.</string>
+    <string name="action_open_settings">Open settings</string>
 
     <!-- Hatalar -->
     <string name="error_generic_title">Something went wrong</string>
