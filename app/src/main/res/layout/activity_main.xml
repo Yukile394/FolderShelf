@@ -10,9 +10,9 @@
 
     <ImageView
         android:id="@+id/imageLogo"
-        android:layout_width="96dp"
-        android:layout_height="96dp"
-        android:layout_marginTop="64dp"
+        android:layout_width="80dp"
+        android:layout_height="80dp"
+        android:layout_marginTop="48dp"
         android:contentDescription="@string/app_name"
         android:src="@drawable/ic_folder"
         app:tint="?attr/colorPrimary"
@@ -24,7 +24,7 @@
         android:id="@+id/textAppName"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_marginTop="20dp"
+        android:layout_marginTop="16dp"
         android:text="@string/app_name"
         android:textAppearance="?attr/textAppearanceHeadlineSmall"
         android:textColor="?attr/colorOnSurface"
@@ -62,6 +62,7 @@
         android:id="@+id/buttonStart"
         android:layout_width="160dp"
         android:layout_height="160dp"
+        android:layout_marginTop="40dp"
         android:text="@string/action_start"
         android:textSize="16sp"
         android:gravity="center"
@@ -70,10 +71,10 @@
         app:iconGravity="textTop"
         app:iconSize="48dp"
         app:iconPadding="8dp"
-        app:layout_constraintTop_toTopOf="parent"
-        app:layout_constraintBottom_toTopOf="@id/buttonManage"
+        app:layout_constraintTop_toBottomOf="@id/textItemCount"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintEnd_toEndOf="parent" />
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintBottom_toTopOf="@id/buttonManage" />
 
     <com.google.android.material.button.MaterialButton
         android:id="@+id/buttonManage"
