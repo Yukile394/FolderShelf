@@ -14,22 +14,12 @@ import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 
-/**
- * MainActivity ekranının durumunu tutar.
- *
- * isRunning → servis gerçekten çalışıyor MU?
- *   (izinler tamam VE FloatingOverlayService.isRunning == true)
- *
- * Eski isReady StateFlow'u isRunning olarak yeniden adlandırıldı çünkü
- * "izinler tamam ama servis çalışmıyor" durumu kullanıcı için anlamsız;
- * buton her zaman "Başlat" göstermeli, tıklanınca servis başlamalı.
- */
 class MainViewModel(application: Application) : AndroidViewModel(application) {
 
     private val repository = ShelfRepository.getInstance(application)
 
-    private val _isRunning = MutableStateFlow(false)
-    val isRunning: StateFlow<Boolean> = _isRunning.asStateFlow()
+    private val _isReady = MutableStateFlow(false)
+    val isReady: StateFlow<Boolean> = _isReady.asStateFlow()
 
     val itemCount: StateFlow<Int> = repository.items
         .map { it.size }
@@ -42,12 +32,8 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
         refreshStatus()
     }
 
-    /**
-     * Servis durumunu anlık olarak okuyup UI'ı günceller.
-     * MainActivity.onResume() ve startOverlayService() tarafından çağrılır.
-     */
     fun refreshStatus() {
         val permissionsOk = PermissionUtils.allRequiredPermissionsGranted(getApplication())
-        _isRunning.value = permissionsOk && FloatingOverlayService.isRunning
+        _isReady.value = permissionsOk && FloatingOverlayService.isRunning
     }
 }
