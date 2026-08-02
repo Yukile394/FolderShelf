@@ -284,6 +284,7 @@ class MainActivity : AppCompatActivity() {
             viewModel.refreshStatus()
             return
         }
+        prefs.clearLastServiceError()
         try {
             ContextCompat.startForegroundService(
                 this,
@@ -301,7 +302,46 @@ class MainActivity : AppCompatActivity() {
         // Servis onCreate()'e ulaşana kadar kısa bekle sonra güncelle
         viewModel.refreshStatus()
         binding.root.postDelayed({ viewModel.refreshStatus() }, 400L)
-        binding.root.postDelayed({ viewModel.refreshStatus() }, 1000L)
+        binding.root.postDelayed({ checkServiceStartupResult() }, 1200L)
+    }
+
+    /**
+     * Servis başlatma isteğinden bir süre sonra çağrılır. Servis hâlâ
+     * çalışmıyorsa (isRunning = false) ama biz onu başlatmayı denediysek,
+     * artık kullanıcıya "hiçbir şey olmadı" izlenimi vermek yerine servisin
+     * kendi içinde yakaladığı gerçek hatayı (varsa) gösteririz.
+     */
+    private fun checkServiceStartupResult() {
+        viewModel.refreshStatus()
+        if (FloatingOverlayService.isRunning) return
+
+        val error = prefs.lastServiceError
+        if (error != null) {
+            prefs.clearLastServiceError()
+            showInfoDialog(
+                getString(R.string.error_generic_title),
+                getString(R.string.error_service_start_failed) + "\n\n" +
+                    error + "\n\n" + oemHintText()
+            )
+        } else {
+            // Servis hiç hata bildirmedi ama yine de çalışmıyor: çoğunlukla
+            // OEM'in (Xiaomi/Oppo/Vivo/Huawei vb.) ek arka plan/otomatik
+            // başlatma kısıtlaması yüzündendir.
+            showInfoDialog(
+                getString(R.string.error_generic_title),
+                getString(R.string.error_service_start_failed) + "\n\n" + oemHintText()
+            )
+        }
+    }
+
+    private fun oemHintText(): String {
+        return "Cihaz: ${Build.MANUFACTURER} ${Build.MODEL}\n\n" +
+            "Bazı cihazlarda (Xiaomi/MIUI, Redmi, POCO, Oppo/ColorOS, Vivo, Huawei vb.) " +
+            "\"Diğer uygulamaların üzerinde göster\" izni açık olsa bile ek bir " +
+            "\"Arka planda açılır pencere göster\" veya \"Otomatik başlat\" izni " +
+            "kapalı olabilir. Ayarlar > Uygulamalar > FolderShelf > İzinler " +
+            "(veya \"Diğer izinler\" / \"Otomatik başlatma\") bölümünden bu " +
+            "seçenekleri de açmanızı öneririz."
     }
 
     // -----------------------------------------------------------------------
