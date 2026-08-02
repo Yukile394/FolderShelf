@@ -26,12 +26,14 @@ import com.yukile.foldershelf.ui.list.ShelfListActivity
 import com.yukile.foldershelf.ui.settings.SettingsActivity
 import com.yukile.foldershelf.util.CrashHandler
 import com.yukile.foldershelf.util.PermissionUtils
+import com.yukile.foldershelf.util.PreferenceHelper
 import kotlinx.coroutines.launch
 
 class MainActivity : AppCompatActivity() {
 
     private lateinit var binding: ActivityMainBinding
     private val viewModel: MainViewModel by viewModels()
+    private val prefs: PreferenceHelper by lazy { PreferenceHelper(this) }
 
     // Çift tıklama / spam koruması
     private var actionInProgress = false
@@ -49,12 +51,26 @@ class MainActivity : AppCompatActivity() {
         actionInProgress = false
         if (granted) {
             startOverlayService()
+        } else if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU &&
+            PermissionUtils.isNotificationPermissionPermanentlyDenied(this, true)
+        ) {
+            showSettingsRedirectDialog(
+                getString(R.string.permission_notification_title),
+                getString(R.string.permission_notification_permanently_denied_message)
+            )
         } else {
             showInfoDialog(
                 getString(R.string.permission_notification_title),
                 getString(R.string.permission_notification_denied_message)
             )
         }
+        viewModel.refreshStatus()
+    }
+
+    private val appSettingsLauncher = registerForActivityResult(
+        ActivityResultContracts.StartActivityForResult()
+    ) {
+        actionInProgress = false
         viewModel.refreshStatus()
     }
 
@@ -132,36 +148,85 @@ class MainActivity : AppCompatActivity() {
     // -----------------------------------------------------------------------
 
     private fun beginPermissionFlow() {
-        if (!PermissionUtils.canDrawOverlays(this)) {
-            showOverlayRationale()
+        val needsOverlay = !PermissionUtils.canDrawOverlays(this)
+        val needsNotification = Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU &&
+            !PermissionUtils.hasNotificationPermission(this)
+
+        // Bildirim izni kalıcı olarak reddedildiyse sistem diyaloğu bir daha
+        // görünmez ve buton "hiçbir şey olmuyormuş" gibi tepkisiz kalır.
+        // Bu yüzden doğrudan uygulama ayarlarına yönlendiriyoruz.
+        if (needsNotification && PermissionUtils.isNotificationPermissionPermanentlyDenied(
+                this, prefs.notificationPermissionRequestedBefore
+            )
+        ) {
+            showSettingsRedirectDialog(
+                getString(R.string.permission_notification_title),
+                getString(R.string.permission_notification_permanently_denied_message)
+            )
             return
         }
-        proceedAfterOverlayCheck()
+
+        if (!needsOverlay && !needsNotification) {
+            actionInProgress = false
+            startOverlayService()
+            return
+        }
+
+        // Her iki izin de eksikse (veya sadece biri), kullanıcıya tüm
+        // gerekli izinleri tek bir açıklama ekranında anlatıp ardından
+        // sırayla isteriz: önce üst pencere (overlay) izni, sonra bildirim.
+        showAllPermissionsRationale(needsOverlay, needsNotification)
     }
 
-    private fun showOverlayRationale() {
+    private fun showAllPermissionsRationale(needsOverlay: Boolean, needsNotification: Boolean) {
+        val title: Int
+        val message: Int
+        if (needsOverlay && needsNotification) {
+            title = R.string.permission_all_title
+            message = R.string.permission_all_message
+        } else if (needsOverlay) {
+            title = R.string.permission_overlay_title
+            message = R.string.permission_overlay_message
+        } else {
+            title = R.string.permission_notification_title
+            message = R.string.permission_notification_message
+        }
+
         AlertDialog.Builder(this)
-            .setTitle(R.string.permission_overlay_title)
-            .setMessage(R.string.permission_overlay_message)
+            .setTitle(title)
+            .setMessage(message)
             .setPositiveButton(R.string.action_continue) { _, _ ->
-                val intent = Intent(
-                    Settings.ACTION_MANAGE_OVERLAY_PERMISSION,
-                    Uri.parse("package:$packageName")
-                )
-                try {
-                    overlayPermissionLauncher.launch(intent)
-                } catch (e: Exception) {
-                    e.printStackTrace()
-                    actionInProgress = false
-                    showInfoDialog(
-                        getString(R.string.error_generic_title),
-                        getString(R.string.error_overlay_settings_unavailable)
-                    )
+                if (needsOverlay) {
+                    requestOverlayPermission()
+                } else {
+                    requestNotificationPermission()
                 }
             }
             .setNegativeButton(R.string.action_cancel) { _, _ -> actionInProgress = false }
             .setOnCancelListener { actionInProgress = false }
             .show()
+    }
+
+    private fun requestOverlayPermission() {
+        val intent = Intent(
+            Settings.ACTION_MANAGE_OVERLAY_PERMISSION,
+            Uri.parse("package:$packageName")
+        )
+        try {
+            overlayPermissionLauncher.launch(intent)
+        } catch (e: Exception) {
+            e.printStackTrace()
+            actionInProgress = false
+            showInfoDialog(
+                getString(R.string.error_generic_title),
+                getString(R.string.error_overlay_settings_unavailable)
+            )
+        }
+    }
+
+    private fun requestNotificationPermission() {
+        prefs.notificationPermissionRequestedBefore = true
+        notificationPermissionLauncher.launch(android.Manifest.permission.POST_NOTIFICATIONS)
     }
 
     private fun proceedAfterOverlayCheck() {
@@ -177,11 +242,41 @@ class MainActivity : AppCompatActivity() {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU &&
             !PermissionUtils.hasNotificationPermission(this)
         ) {
-            notificationPermissionLauncher.launch(android.Manifest.permission.POST_NOTIFICATIONS)
+            if (PermissionUtils.isNotificationPermissionPermanentlyDenied(
+                    this, prefs.notificationPermissionRequestedBefore
+                )
+            ) {
+                showSettingsRedirectDialog(
+                    getString(R.string.permission_notification_title),
+                    getString(R.string.permission_notification_permanently_denied_message)
+                )
+                return
+            }
+            showAllPermissionsRationale(needsOverlay = false, needsNotification = true)
             return
         }
         actionInProgress = false
         startOverlayService()
+    }
+
+    private fun showSettingsRedirectDialog(title: String, message: String) {
+        AlertDialog.Builder(this)
+            .setTitle(title)
+            .setMessage(message)
+            .setPositiveButton(R.string.action_open_settings) { _, _ ->
+                val intent = Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS).apply {
+                    data = Uri.parse("package:$packageName")
+                }
+                try {
+                    appSettingsLauncher.launch(intent)
+                } catch (e: Exception) {
+                    e.printStackTrace()
+                    actionInProgress = false
+                }
+            }
+            .setNegativeButton(R.string.action_cancel) { _, _ -> actionInProgress = false }
+            .setOnCancelListener { actionInProgress = false }
+            .show()
     }
 
     private fun startOverlayService() {
